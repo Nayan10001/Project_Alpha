@@ -1,0 +1,179 @@
+{
+  "extracted_skills": [
+    "agile",
+    "artificial intelligence",
+    "aws",
+    "c++",
+    "css",
+    "data analysis",
+    "deep learning",
+    "docker",
+    "fastapi",
+    "git",
+    "html",
+    "javascript",
+    "linux",
+    "machine learning",
+    "mongodb",
+    "next.js",
+    "nlp",
+    "node.js",
+    "numpy",
+    "pandas",
+    "postgresql",
+    "python",
+    "pytorch",
+    "react",
+    "rest api",
+    "scikit-learn",
+    "sql",
+    "tailwind",
+    "tensorflow",
+    "typescript"
+  ],
+  "matches": [
+    {
+      "id": "ba600c89-d792-4728-8324-3313a6bc66e7",
+      "title": "AI Engineer New Grad 2025-2026 - Poe (Remote)",
+      "organisation": "Quora",
+      "match_score": 0.6938,
+      "semantic_score": 0.541,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/ai-engineer-new-grad-2025-2026-poe-remote-at-quora-4377069986",
+      "advice": "You're a strong match for the AI Engineer New Grad 2025-2026 - Poe (Remote) role at Quora! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    },
+    {
+      "id": "3e7faf69-2f6c-4386-954f-36a3befa7ef6",
+      "title": "Python Gen AI Developer",
+      "organisation": "Launch by NTT DATA",
+      "match_score": 0.6924,
+      "semantic_score": 0.5386,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/python-gen-ai-developer-at-launch-by-ntt-data-4377488555",
+      "advice": "You're a strong match for the Python Gen AI Developer role at Launch by NTT DATA! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    },
+    {
+      "id": "721aecb0-1416-4d53-9873-d378b3559017",
+      "title": "AI/ML Engineer Intern Master's - Summer 2026",
+      "organisation": "LinkedIn",
+      "match_score": 0.6921,
+      "semantic_score": 0.5381,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/ai-ml-engineer-intern-masters-summer-2026-at-linkedin",
+      "advice": "You're a strong match for the AI/ML Engineer Intern Master's - Summer 2026 role at LinkedIn! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    },
+    {
+      "id": "29ba9d44-3faf-4035-a8ea-c12e42ef2b16",
+      "title": "Python AI/ML Developer",
+      "organisation": "S4 Analytics LLC",
+      "match_score": 0.6893,
+      "semantic_score": 0.5335,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/python-ai-ml-developer-at-s4-analytics-llc-4376418342",
+      "advice": "You're a strong match for the Python AI/ML Developer role at S4 Analytics LLC! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    },
+    {
+      "id": "d1790af3-aa02-4bc4-bd11-03991a022501",
+      "title": "Junior AI Engineer",
+      "organisation": "Synergy ECP",
+      "match_score": 0.6831,
+      "semantic_score": 0.5231,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/junior-ai-engineer-at-synergy-ecp-4376805875",
+      "advice": "You're a strong match for the Junior AI Engineer role at Synergy ECP! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    }
+  ],
+  "skill_gaps": [
+    {
+      "skill": "computer vision",
+      "importance": "preferred",
+      "advice": "Having computer vision knowledge would strengthen your candidacy. Start with OpenCV basics and move to CNN architectures."
+    }
+  ],
+  "overall_advice": "Hello! It is great to meet you. As someone who has spent years in the trenches of engineering and AI, I\u2019ve reviewed your profile, and I have to say: **you are sitting on a goldmine of talent.**\n\nLet\u2019s break down where you are, where you\u2019re going, and exactly how we\u2019re going to get you there.\n\n### Part 1: The Validation\nFirst, take a second to realize how much you\u2019ve already achieved. You aren't just a \"specialist\"\u2014you are a **Full-Stack AI practitioner.** \n\nYour skill set is a rare and powerful combination. You have the heavy-hitting mathematical foundation (PyTorch, TensorFlow, Scikit-learn), the data-wrangling chops (Pandas, SQL, NumPy), and the ability to actually *deploy* what you build (FastAPI, Docker, Next.js). A 69% match for roles at powerhouses like **Quora (Poe)** and **LinkedIn** is an incredible starting point. You\u2019ve clearly put in the hours to master the \"Gen AI\" stack, and that is exactly what the industry is hungry for right now.\n\n### Part 2: The Real Talk\nHere is the honest truth from a mentor's perspective: You are currently a \"text-and-data\" expert. While that is valuable, the industry is moving rapidly toward **Multimodal AI.**\n\nThe gap holding you back from that 90%+ match score is **Computer Vision (CV).** \n\nWhy does this matter? Look at your top choice, Poe by Quora. Poe doesn't just want a chatbot; they want an AI that can \"see\" a screenshot and turn it into code, or \"read\" a PDF with complex diagrams. LinkedIn wants AI that can understand video content and image-based posts. If you can\u2019t speak the language of pixels as well as you speak the language of tokens, you are leaving half of the AI world on the table. Bridging this gap will turn you from a \"language modeler\" into a \"complete AI architect.\"\n\n### Part 3: The Action Plan\nWe aren't going to spend months on this. We\u2019re going to leverage your existing PyTorch and Python knowledge to bridge this gap quickly. \n\n**Your focus for this week: Transition from Tokens to Pixels.**\n\n- [ ] **Task 1: Master the \"OpenCV to Tensor\" Pipeline**\n  *   *Why:* You already know how to handle text arrays; you need to learn how to handle image arrays.\n  *   *Action:* Spend 3 hours learning OpenCV basics (loading, resizing, color-space conversion). Practice converting an image into a NumPy array and then into a PyTorch Tensor. This is the \"Data Engineering\" of the CV world.\n\n- [ ] **Task 2: Implement a Convolutional Neural Network (CNN) from Scratch**\n  *   *Why:* CNNs are the \"Transformers\" of the image world. You need to understand how spatial hierarchies work.\n  *   *Action:* Use PyTorch to build a simple CNN for the CIFAR-10 dataset. Don\u2019t just copy code\u2014focus on understanding \"pooling\" and \"stride.\" Compare this to how you handle sequences in NLP.\n\n- [ ] **Task 3: Explore the \"Vision Transformer\" (ViT)**\n  *   *Why:* This is the bridge! ViTs use the same \"Attention\" mechanism you already know from NLP and apply it to images. \n  *   *Action:* Go to Hugging Face, look up a pre-trained `ViTImageProcessor`, and write a script that takes a local image and outputs a classification. This connects your existing NLP intuition to CV.\n\n**Where to focus your energy this week:**\nForget deep theory for a moment. Focus on **Multimodal integration.** Since you already know FastAPI and React, try to build a tiny \"Image Descriptor\" app: \n1.  User uploads a photo (React).\n2.  FastAPI receives it.\n3.  A PyTorch CV model (like ResNet or a ViT) labels it.\n4.  The label is sent to an LLM (your NLP strength) to write a funny poem about the image.\n\n**You are closer than you think.** You have the engine; we just need to give you the eyes. Let\u2019s get to work!"
+}

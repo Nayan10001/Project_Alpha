@@ -1,3 +1,5 @@
 __pycache__/
 *.pyc
 Screenshot*.png
+keys.txt
+fastapi_logs.log

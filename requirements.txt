@@ -7,3 +7,4 @@ pymupdf==1.24.10
 python-multipart==0.0.12
 pydantic==2.9.2
 spacy==3.8.11
+google-generativeai>=0.8.2

@@ -132,7 +132,7 @@ def upload_and_test():
     print(f"{'=' * 65}")
 
     # Also dump raw JSON for inspection
-    json_path = os.path.join(BASE_DIR, "data", "test_response.json")
+    json_path = os.path.join(BASE_DIR, "data", "output.json")
     print(f"\n📋 Raw JSON response saved to: {json_path}")
     with open(json_path, "w") as f:
         json.dump(data, f, indent=2)

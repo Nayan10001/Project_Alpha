@@ -14,6 +14,8 @@ import logging
 import re
 from typing import Dict, List, Optional, Set
 
+import google.generativeai as genai
+
 import fitz  # PyMuPDF
 import spacy
 from spacy.matcher import PhraseMatcher
@@ -45,6 +47,12 @@ TOP_K = int(os.getenv("TOP_K", 5))
 # Hybrid scoring weights
 W_SEMANTIC = 0.6   # weight for cosine similarity from Qdrant
 W_SKILL    = 0.4   # weight for discrete skill overlap ratio
+
+# LLM Configuration for holistic advice (Gemini)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyBf_n_FOG0YV3JbPdItkJzy7dUTKxQ6Sv8")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+LLM_MODEL_NAME = os.getenv("LLM_MODEL", "gemini-flash-latest")
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -528,6 +536,67 @@ def generate_overall_advice(
     return " ".join(parts)
 
 
+def generate_overall_advice_with_llm(
+    extracted_skills: List[str],
+    matches: List["MatchResult"],
+    gaps: List[SkillGap],
+) -> str:
+    """Use a Transformer/LLM to generate a personalized, holistic learning roadmap."""
+    # We allow running if the config was completed
+    if not os.getenv("GEMINI_API_KEY", "AIzaSyBf_n_FOG0YV3JbPdItkJzy7dUTKxQ6Sv8"):
+        # Fallback to rules-based advice if no LLM configured
+        return generate_overall_advice(extracted_skills, matches, gaps)
+
+    # 1. Build the context for the AI
+    skills_context = ", ".join(extracted_skills) if extracted_skills else "None explicitly listed."
+    
+    jobs_context = ""
+    for idx, match in enumerate(matches[:3]):
+        jobs_context += (
+            f"\n{idx+1}. {match.title} at {match.organisation} (Score: {int(match.match_score * 100)}%)\n"
+            f"   - Matched Skills: {', '.join(match.matched_skills)}\n"
+            f"   - Missing Skills: {', '.join(match.missing_skills)}\n"
+        )
+        
+    gaps_context = ", ".join([g.skill for g in gaps[:5]]) if gaps else "None"
+
+    prompt = f"""
+    You are an expert technical mentor advising a student. Your job is to analyze their resume data against their top recommended roles, and provide a holistic, empowering "what's next?" roadmap to help them grow.
+    
+    STUDENT'S CURRENT SKILLS:
+    {skills_context}
+    
+    TOP 3 RECOMMENDED ROLES & SCORES:
+    {jobs_context}
+    
+    KEY SKILL GAPS TO BRIDGE:
+    {gaps_context}
+    
+    INSTRUCTIONS:
+    Write a clear, structured roadmap directly addressing the student (using "you").
+    
+    - Part 1 (Validation): Acknowledge their current skills and celebrate their best match. Make them feel recognized for their hard work.
+    - Part 2 (The Real Talk): Act as an honest mentor. Point out the specific gaps that are holding them back from being the perfect candidate for these roles. Briefly explain *why* these skills matter in the industry.
+    - Part 3 (The Action Plan): Give them a highly specific, actionable study plan formatted as a bulleted checklist. Tell them the exact next 3 things to learn and exactly where to focus their energy this week. Use clear task-list formatting (e.g. `[ ] Task 1`, `[ ] Task 2`).
+
+    Keep the tone deeply inspiring, empathetic, action-oriented, and professional, exactly like a senior engineer who really wants them to succeed.
+    """
+
+    try:
+        model = genai.GenerativeModel(model_name=LLM_MODEL_NAME)
+        response = model.generate_content(
+            prompt,
+            generation_config=genai.types.GenerationConfig(
+                temperature=0.7,
+                max_output_tokens=2048,
+            )
+        )
+        return response.text.strip()
+    except Exception as e:
+        logger.error("LLM Generation failed: %s", e)
+        return generate_overall_advice(extracted_skills, matches, gaps)
+
+
 # ---------------------------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------------------------
@@ -639,8 +708,8 @@ async def upload_resume(file: UploadFile = File(...)):
 
     unique_gaps = sorted(gap_map.values(), key=lambda g: (0 if g.importance == "critical" else 1, g.skill))
 
-    # Generate overall summary advice
-    overall = generate_overall_advice(extracted_skills, matches, unique_gaps)
+    # Generate AI-powered summary advice (falls back to hardcoded if no API key is set)
+    overall = generate_overall_advice_with_llm(extracted_skills, matches, unique_gaps)
 
     return ResumeResponse(
         extracted_skills=extracted_skills,
