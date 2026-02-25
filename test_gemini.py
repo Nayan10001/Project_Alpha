@@ -1,7 +1,7 @@
 import os
 import google.generativeai as genai
 
-genai.configure(api_key="AIzaSyBf_n_FOG0YV3JbPdItkJzy7dUTKxQ6Sv8")
+genai.configure(api_key="")
 model = genai.GenerativeModel("gemini-flash-latest")
 response = model.generate_content("Write a 3-paragraph mentor roadmap to a student.", generation_config=genai.types.GenerationConfig(max_output_tokens=1200))
 
