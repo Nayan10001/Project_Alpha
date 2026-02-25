@@ -1,0 +1,179 @@
+{
+  "extracted_skills": [
+    "agile",
+    "artificial intelligence",
+    "aws",
+    "c++",
+    "css",
+    "data analysis",
+    "deep learning",
+    "docker",
+    "fastapi",
+    "git",
+    "html",
+    "javascript",
+    "linux",
+    "machine learning",
+    "mongodb",
+    "next.js",
+    "nlp",
+    "node.js",
+    "numpy",
+    "pandas",
+    "postgresql",
+    "python",
+    "pytorch",
+    "react",
+    "rest api",
+    "scikit-learn",
+    "sql",
+    "tailwind",
+    "tensorflow",
+    "typescript"
+  ],
+  "matches": [
+    {
+      "id": "ba600c89-d792-4728-8324-3313a6bc66e7",
+      "title": "AI Engineer New Grad 2025-2026 - Poe (Remote)",
+      "organisation": "Quora",
+      "match_score": 0.6938,
+      "semantic_score": 0.541,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/ai-engineer-new-grad-2025-2026-poe-remote-at-quora-4377069986",
+      "advice": "You're a strong match for the AI Engineer New Grad 2025-2026 - Poe (Remote) role at Quora! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    },
+    {
+      "id": "3e7faf69-2f6c-4386-954f-36a3befa7ef6",
+      "title": "Python Gen AI Developer",
+      "organisation": "Launch by NTT DATA",
+      "match_score": 0.6924,
+      "semantic_score": 0.5386,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/python-gen-ai-developer-at-launch-by-ntt-data-4377488555",
+      "advice": "You're a strong match for the Python Gen AI Developer role at Launch by NTT DATA! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    },
+    {
+      "id": "721aecb0-1416-4d53-9873-d378b3559017",
+      "title": "AI/ML Engineer Intern Master's - Summer 2026",
+      "organisation": "LinkedIn",
+      "match_score": 0.6921,
+      "semantic_score": 0.5381,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/ai-ml-engineer-intern-masters-summer-2026-at-linkedin",
+      "advice": "You're a strong match for the AI/ML Engineer Intern Master's - Summer 2026 role at LinkedIn! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    },
+    {
+      "id": "29ba9d44-3faf-4035-a8ea-c12e42ef2b16",
+      "title": "Python AI/ML Developer",
+      "organisation": "S4 Analytics LLC",
+      "match_score": 0.6893,
+      "semantic_score": 0.5335,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/python-ai-ml-developer-at-s4-analytics-llc-4376418342",
+      "advice": "You're a strong match for the Python AI/ML Developer role at S4 Analytics LLC! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    },
+    {
+      "id": "d1790af3-aa02-4bc4-bd11-03991a022501",
+      "title": "Junior AI Engineer",
+      "organisation": "Synergy ECP",
+      "match_score": 0.6831,
+      "semantic_score": 0.5231,
+      "skill_overlap_ratio": 0.9231,
+      "matched_skills": [
+        "data analysis",
+        "deep learning",
+        "docker",
+        "machine learning",
+        "nlp",
+        "numpy",
+        "pandas",
+        "python",
+        "pytorch",
+        "scikit-learn",
+        "sql",
+        "tensorflow"
+      ],
+      "missing_skills": [
+        "computer vision"
+      ],
+      "linkedin_url": "https://www.linkedin.com/jobs/view/junior-ai-engineer-at-synergy-ecp-4376805875",
+      "advice": "You're a strong match for the Junior AI Engineer role at Synergy ECP! Your strengths in data analysis, deep learning, docker, machine learning, nlp align well with what they're looking for (92% skill overlap). To strengthen your application, consider picking up computer vision."
+    }
+  ],
+  "skill_gaps": [
+    {
+      "skill": "computer vision",
+      "importance": "preferred",
+      "advice": "Having computer vision knowledge would strengthen your candidacy. Start with OpenCV basics and move to CNN architectures."
+    }
+  ],
+  "overall_advice": "Based on your resume, we identified 30 relevant skills. Your strongest match is the \"AI Engineer New Grad 2025-2026 - Poe (Remote)\" role at Quora (69% match). Nice-to-have skills you could add: computer vision. These would broaden your opportunities but aren't dealbreakers. Keep building projects that showcase these skills \u2014 hands-on experience is what recruiters look for most."
+}

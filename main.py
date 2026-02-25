@@ -15,6 +15,8 @@ import re
 from typing import Dict, List, Optional, Set
 
 import fitz  # PyMuPDF
+import spacy
+from spacy.matcher import PhraseMatcher
 import torch
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -68,20 +70,30 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# ML Model & Qdrant Client  (lazy-loaded on startup)
+# ML Model, NLP & Qdrant Client  (lazy-loaded on startup)
 # ---------------------------------------------------------------------------
 model: Optional[SentenceTransformer] = None
+nlp = None
+skill_matcher = None
 qdrant: Optional[QdrantClient] = None
 
 
 @app.on_event("startup")
 async def startup_event():
-    """Load the sentence-transformer model and connect to Qdrant."""
-    global model, qdrant
+    """Load the sentence-transformer model, spaCy NLP, and connect to Qdrant."""
+    global model, qdrant, nlp, skill_matcher
 
     logger.info("Loading embedding model: %s …", EMBEDDING_MODEL)
     model = SentenceTransformer(EMBEDDING_MODEL)
     logger.info("Embedding model loaded successfully.")
+
+    logger.info("Loading spaCy NLP model for NER-based skill extraction…")
+    nlp = spacy.load("en_core_web_sm")
+    skill_matcher = PhraseMatcher(nlp.vocab, attr="LOWER")
+    # Add all synonym patterns to the matcher
+    patterns = [nlp.make_doc(term) for term in SKILL_SYNONYMS.keys()]
+    skill_matcher.add("SKILL", patterns)
+    logger.info("spaCy NER skill matcher loaded with %d patterns.", len(patterns))
 
     logger.info("Connecting to Qdrant at %s:%s …", QDRANT_HOST, QDRANT_PORT)
     qdrant = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
@@ -105,6 +117,7 @@ class SkillGap(BaseModel):
     """A single skill gap entry."""
     skill: str
     importance: str = "required"  # critical | required | preferred
+    advice: str = ""  # Human-readable learning advice
 
 
 class MatchResult(BaseModel):
@@ -117,6 +130,8 @@ class MatchResult(BaseModel):
     skill_overlap_ratio: float
     matched_skills: List[str]
     missing_skills: List[str]
+    linkedin_url: str = ""
+    advice: str = ""  # Natural language match explanation
 
 
 class ResumeResponse(BaseModel):
@@ -124,6 +139,7 @@ class ResumeResponse(BaseModel):
     extracted_skills: List[str]
     matches: List[MatchResult]
     skill_gaps: List[SkillGap]
+    overall_advice: str = ""  # Summary recommendations in natural language
 
 
 class Opportunity(BaseModel):
@@ -137,6 +153,7 @@ class Opportunity(BaseModel):
     required_skills: List[str]
     timeline: str
     eligibility: str
+    linkedin_url: str = ""
 
 
 class HealthResponse(BaseModel):
@@ -267,17 +284,41 @@ def extract_text_from_pdf(pdf_bytes: bytes) -> str:
 
 def extract_skills(text: str) -> List[str]:
     """
-    Extract skills from text using keyword matching + synonym normalization.
-    Multi-word skills are matched first, then single-word with word-boundary checks.
+    NER-based skill extraction using spaCy PhraseMatcher.
+    Uses linguistic tokenization for proper word-boundary matching,
+    handles multi-word expressions, and normalizes via synonym map.
+    Falls back to regex matching if spaCy is not loaded.
     """
-    text_lower = text.lower()
+    if nlp is None or skill_matcher is None:
+        # Fallback to regex if spaCy not loaded
+        return _extract_skills_regex(text)
+
+    doc = nlp(text)
     found: Set[str] = set()
 
-    # Sort keywords by length descending so multi-word matches take priority
-    sorted_keywords = sorted(SKILL_KEYWORDS, key=len, reverse=True)
+    # PhraseMatcher runs NER-style matching with linguistic features
+    matches = skill_matcher(doc)
+    for match_id, start, end in matches:
+        span_text = doc[start:end].text.lower()
+        canonical = normalize_skill(span_text)
+        found.add(canonical)
 
+    # Also try to extract skills from spaCy's built-in NER entities
+    # (ORG, PRODUCT entities can sometimes be frameworks/tools)
+    for ent in doc.ents:
+        ent_lower = ent.text.lower().strip()
+        if ent_lower in SKILL_SYNONYMS:
+            found.add(normalize_skill(ent_lower))
+
+    return sorted(found)
+
+
+def _extract_skills_regex(text: str) -> List[str]:
+    """Fallback regex-based skill extraction."""
+    text_lower = text.lower()
+    found: Set[str] = set()
+    sorted_keywords = sorted(SKILL_KEYWORDS, key=len, reverse=True)
     for keyword in sorted_keywords:
-        # For single-char / very short keywords (c, r, go), use word boundaries
         if len(keyword) <= 2:
             pattern = r'\b' + re.escape(keyword) + r'\b'
             if re.search(pattern, text_lower):
@@ -285,7 +326,6 @@ def extract_skills(text: str) -> List[str]:
         else:
             if keyword in text_lower:
                 found.add(normalize_skill(keyword))
-
     return sorted(found)
 
 
@@ -332,6 +372,7 @@ def compute_skill_gaps(
     Return skills required by the opportunity that the student lacks.
     Skills mentioned in the job title are marked 'critical',
     others default to 'preferred'.
+    Includes human-readable learning advice per gap.
     """
     student_set = {s.lower() for s in student_skills}
     title_lower = opportunity_title.lower()
@@ -339,22 +380,152 @@ def compute_skill_gaps(
     gaps: List[SkillGap] = []
     for skill in opportunity_skills:
         if skill.lower() not in student_set:
-            # If the skill (or a synonym) appears in the job title → critical
+            # Determine importance
             if skill.lower() in title_lower:
                 importance = "critical"
             else:
-                # Check if any synonym of this skill appears in title
                 is_in_title = any(
                     syn in title_lower
                     for syn, canonical in SKILL_SYNONYMS.items()
                     if canonical == skill.lower()
                 )
                 importance = "critical" if is_in_title else "preferred"
-            gaps.append(SkillGap(skill=skill, importance=importance))
 
-    # Sort: critical first, then preferred
+            advice = _generate_gap_advice(skill, importance)
+            gaps.append(SkillGap(skill=skill, importance=importance, advice=advice))
+
     gaps.sort(key=lambda g: (0 if g.importance == "critical" else 1, g.skill))
     return gaps
+
+
+# ---------------------------------------------------------------------------
+# Natural Language Advice Generation
+# ---------------------------------------------------------------------------
+
+# Learning resource suggestions by skill category
+SKILL_LEARNING_HINTS: Dict[str, str] = {
+    "python": "Practice on LeetCode and build projects with Flask or FastAPI",
+    "javascript": "Try freeCodeCamp's JavaScript course and build a portfolio project",
+    "typescript": "Start with TypeScript's official handbook and convert a JS project",
+    "react": "Follow the official React tutorial and build a CRUD app",
+    "next.js": "Try the Next.js 'Learn' course at nextjs.org/learn",
+    "node.js": "Build a REST API with Express.js to get hands-on experience",
+    "machine learning": "Start with Andrew Ng's ML course on Coursera and implement models in scikit-learn",
+    "deep learning": "Take fast.ai's Practical Deep Learning course — it's free and project-based",
+    "pytorch": "Follow PyTorch's official 60-minute blitz tutorial and build a classifier",
+    "tensorflow": "Try TensorFlow's beginner tutorials on tensorflow.org",
+    "nlp": "Explore Hugging Face's NLP course and fine-tune a text classifier",
+    "computer vision": "Start with OpenCV basics and move to CNN architectures",
+    "docker": "Containerize one of your existing projects — Docker's getting started guide is excellent",
+    "kubernetes": "Start with Minikube locally and deploy a simple app",
+    "aws": "Get hands-on with AWS Free Tier — start with EC2 and S3",
+    "gcp": "Try Google Cloud's Qwiklabs for guided hands-on labs",
+    "sql": "Practice on SQLZoo or LeetCode SQL problems",
+    "git": "Use Git daily in your projects and learn branching strategies",
+    "linux": "Set up a Linux VM or use WSL and practice command-line navigation",
+    "ci/cd": "Set up GitHub Actions for one of your repos — it's free and well-documented",
+    "data analysis": "Work through Kaggle's Pandas course and analyze a real dataset",
+    "scikit-learn": "Build a classification pipeline on a Kaggle dataset",
+    "pandas": "Work through Kaggle's Pandas micro-course",
+    "numpy": "Practice with NumPy's quickstart tutorial and implement math from scratch",
+    "figma": "Redesign an existing app's UI in Figma to build your design skills",
+    "tailwind": "Rebuild a UI component library using Tailwind CSS utility classes",
+    "rest api": "Build and document a REST API with Swagger/OpenAPI",
+    "agile": "Study the Scrum Guide and participate in sprint-based projects",
+    "blockchain": "Follow Ethereum's developer documentation and deploy a smart contract",
+    "networking": "Study CompTIA Network+ material and set up a home lab",
+    "penetration testing": "Try TryHackMe or HackTheBox platforms for hands-on cybersecurity practice",
+    "encryption": "Study cryptography basics and implement common algorithms",
+}
+
+
+def _generate_gap_advice(skill: str, importance: str) -> str:
+    """Generate human-readable advice for a single skill gap."""
+    hint = SKILL_LEARNING_HINTS.get(skill.lower(), f"Look for online courses, tutorials, or projects involving {skill}")
+    if importance == "critical":
+        return f"This is a key skill explicitly mentioned in the job title. {hint}."
+    return f"Having {skill} knowledge would strengthen your candidacy. {hint}."
+
+
+def generate_match_advice(
+    title: str,
+    org: str,
+    matched: List[str],
+    missing: List[str],
+    hybrid_score: float,
+    skill_ratio: float,
+) -> str:
+    """Generate a natural-language explanation for a single match."""
+    total = len(matched) + len(missing)
+    pct = round(skill_ratio * 100)
+
+    # Opening assessment
+    if hybrid_score >= 0.65:
+        opening = f"You're a strong match for the {title} role at {org}!"
+    elif hybrid_score >= 0.45:
+        opening = f"You're a reasonable match for the {title} role at {org}."
+    else:
+        opening = f"This role at {org} is a stretch, but could be a growth opportunity."
+
+    # Skill summary
+    parts = [opening]
+    if matched:
+        top_skills = matched[:5]
+        parts.append(f"Your strengths in {', '.join(top_skills)} align well with what they're looking for ({pct}% skill overlap).")
+
+    # Gap advice
+    if not missing:
+        parts.append("You meet all the listed skill requirements — focus on showcasing your projects and experience.")
+    elif len(missing) <= 2:
+        parts.append(f"To strengthen your application, consider picking up {' and '.join(missing)}.")
+    else:
+        top_gaps = missing[:3]
+        parts.append(f"The main gaps are {', '.join(top_gaps)}. Prioritize learning these to become a competitive candidate.")
+
+    return " ".join(parts)
+
+
+def generate_overall_advice(
+    extracted_skills: List[str],
+    matches: List["MatchResult"],
+    gaps: List[SkillGap],
+) -> str:
+    """Generate a summary of recommendations across all matches."""
+    parts = []
+
+    # Profile strength
+    parts.append(f"Based on your resume, we identified {len(extracted_skills)} relevant skills.")
+
+    # Best match context
+    if matches:
+        best = matches[0]
+        pct = round(best.match_score * 100)
+        parts.append(f"Your strongest match is the \"{best.title}\" role at {best.organisation} ({pct}% match).")
+
+    # Gap summary
+    critical_gaps = [g for g in gaps if g.importance == "critical"]
+    preferred_gaps = [g for g in gaps if g.importance != "critical"]
+
+    if not gaps:
+        parts.append("Impressively, you have no skill gaps across your top matches — you're well-prepared!")
+    else:
+        if critical_gaps:
+            crit_names = [g.skill for g in critical_gaps[:3]]
+            parts.append(
+                f"Your most important skill gaps are: {', '.join(crit_names)}. "
+                f"These are explicitly mentioned in job titles, so learning them should be your top priority."
+            )
+        if preferred_gaps:
+            pref_names = [g.skill for g in preferred_gaps[:3]]
+            parts.append(
+                f"Nice-to-have skills you could add: {', '.join(pref_names)}. "
+                f"These would broaden your opportunities but aren't dealbreakers."
+            )
+
+    # Closing
+    parts.append("Keep building projects that showcase these skills — hands-on experience is what recruiters look for most.")
+
+    return " ".join(parts)
 
 
 # ---------------------------------------------------------------------------
@@ -408,7 +579,7 @@ async def upload_resume(file: UploadFile = File(...)):
             detail="Vector search unavailable.",
         ) from exc
 
-    # 5. Build response with hybrid scoring + skill-gap analysis
+    # 5. Build response with hybrid scoring + skill-gap analysis + advice
     matches: List[MatchResult] = []
     all_gaps: List[SkillGap] = []
 
@@ -417,6 +588,7 @@ async def upload_resume(file: UploadFile = File(...)):
         opp_title = payload.get("title", "Unknown")
         opp_org = payload.get("organisation", "Unknown")
         opp_skills = normalize_skill_set(payload.get("required_skills", []))
+        opp_url = payload.get("linkedin_url", "")
 
         # Normalize student skills for comparison
         student_normalized = normalize_skill_set(extracted_skills)
@@ -428,8 +600,14 @@ async def upload_resume(file: UploadFile = File(...)):
         semantic = round(hit.score, 4)
         hybrid = compute_hybrid_score(semantic, skill_ratio)
 
-        # Compute weighted skill gaps
+        # Compute weighted skill gaps with per-gap advice
         gaps = compute_skill_gaps(student_normalized, opp_skills, opp_title)
+
+        # Generate natural language match advice
+        advice = generate_match_advice(
+            opp_title, opp_org, matched,
+            [g.skill for g in gaps], hybrid, skill_ratio,
+        )
 
         matches.append(
             MatchResult(
@@ -441,6 +619,8 @@ async def upload_resume(file: UploadFile = File(...)):
                 skill_overlap_ratio=skill_ratio,
                 matched_skills=matched,
                 missing_skills=[g.skill for g in gaps],
+                linkedin_url=opp_url,
+                advice=advice,
             )
         )
         all_gaps.extend(gaps)
@@ -448,7 +628,7 @@ async def upload_resume(file: UploadFile = File(...)):
     # Re-sort matches by hybrid score (descending)
     matches.sort(key=lambda m: m.match_score, reverse=True)
 
-    # Deduplicate skill gaps across all matches, keeping highest importance
+    # Deduplicate skill gaps across all matches, keeping highest importance + advice
     gap_map: dict[str, SkillGap] = {}
     for gap in all_gaps:
         key = gap.skill.lower()
@@ -459,10 +639,14 @@ async def upload_resume(file: UploadFile = File(...)):
 
     unique_gaps = sorted(gap_map.values(), key=lambda g: (0 if g.importance == "critical" else 1, g.skill))
 
+    # Generate overall summary advice
+    overall = generate_overall_advice(extracted_skills, matches, unique_gaps)
+
     return ResumeResponse(
         extracted_skills=extracted_skills,
         matches=matches,
         skill_gaps=unique_gaps,
+        overall_advice=overall,
     )
 
 
@@ -501,6 +685,7 @@ async def get_opportunities():
                 required_skills=p.get("required_skills", []),
                 timeline=p.get("timeline", ""),
                 eligibility=p.get("eligibility", ""),
+                linkedin_url=p.get("linkedin_url", ""),
             )
         )
 
