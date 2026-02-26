@@ -22,7 +22,8 @@
         <div class="header__icon">α</div>
         <h1 class="header__title">Project Alpha</h1>
       </div>
-      <p class="header__sub">Upload your resume, search for companies, or explore opportunities matched to your skills</p>
+      <p class="header__sub">Upload your resume, search for companies, or explore opportunities matched to your skills
+      </p>
     </header>
 
     <!-- ==================== TABS ==================== -->
@@ -97,7 +98,8 @@ e.g. I am a final-year CS student looking for AI/ML internships at startups work
           <div class="advice-box__label">🧠 Resume Context Active</div>
           Your uploaded resume is being cross-referenced with search results for personalized ranking.
         </div>
-        <p class="search-hint">Tip: The more detail you provide, the better the results. Press <strong>Ctrl+Enter</strong> to search.</p>
+        <p class="search-hint">Tip: The more detail you provide, the better the results. Press
+          <strong>Ctrl+Enter</strong> to search.</p>
         <button class="btn btn-search" id="search-btn" onclick="performHybridSearch()">
           <span id="search-btn-text">Discover Companies</span>
           <div class="spinner-inline" id="search-loader"></div>
@@ -135,22 +137,22 @@ e.g. I am a final-year CS student looking for AI/ML internships at startups work
     // DOM REFS
     // ==============================================================
     const $ = (sel) => document.querySelector(sel);
-    const fileInput    = $('#file-input');
-    const uploadZone   = $('#upload-zone');
+    const fileInput = $('#file-input');
+    const uploadZone = $('#upload-zone');
     const fileSelected = $('#file-selected');
-    const fileName     = $('#file-name');
-    const analyzeBtn   = $('#analyze-btn');
-    const btnText      = $('#btn-text');
-    const loaderEl     = $('#loader');
-    const resultsEl    = $('#results');
-    const errorEl      = $('#error-msg');
-    const skillsGrid   = $('#skills-grid');
-    const matchesList  = $('#matches-list');
-    const gapList      = $('#gap-list');
-    const searchInput  = $('#search-input');
-    const filterType   = $('#filter-type');
-    const oppList      = $('#opp-list');
-    const oppCount     = $('#opp-count');
+    const fileName = $('#file-name');
+    const analyzeBtn = $('#analyze-btn');
+    const btnText = $('#btn-text');
+    const loaderEl = $('#loader');
+    const resultsEl = $('#results');
+    const errorEl = $('#error-msg');
+    const skillsGrid = $('#skills-grid');
+    const matchesList = $('#matches-list');
+    const gapList = $('#gap-list');
+    const searchInput = $('#search-input');
+    const filterType = $('#filter-type');
+    const oppList = $('#opp-list');
+    const oppCount = $('#opp-count');
 
     let selectedFile = null;
     let allOpportunities = [];
@@ -253,7 +255,7 @@ e.g. I am a final-year CS student looking for AI/ML internships at startups work
         overallWrap.innerHTML = `
           <div class="advice-box advice-box--overall">
             <div class="advice-box__label">💡 Your Personalized Summary</div>
-            ${escHtml(data.overall_advice)}
+            <div class="advice-content">${renderMarkdown(data.overall_advice)}</div>
           </div>`;
       } else {
         overallWrap.innerHTML = '';
@@ -268,8 +270,8 @@ e.g. I am a final-year CS student looking for AI/ML internships at startups work
       matchesList.innerHTML = data.matches.map((m, i) => {
         const pct = Math.round(m.skill_overlap_ratio * 100);
         const scoreClass = m.match_score >= 0.65 ? 'score-high'
-                         : m.match_score >= 0.45 ? 'score-medium'
-                         : 'score-low';
+          : m.match_score >= 0.45 ? 'score-medium'
+            : 'score-low';
         const linkedinHtml = m.linkedin_url
           ? `<a class="linkedin-link" href="${escAttr(m.linkedin_url)}" target="_blank" rel="noopener">🔗 View on LinkedIn</a>`
           : '';
@@ -425,7 +427,7 @@ e.g. I am a final-year CS student looking for AI/ML internships at startups work
     }
 
     // Ctrl+Enter to search
-    $('#search-query').addEventListener('keydown', function(e) {
+    $('#search-query').addEventListener('keydown', function (e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') performHybridSearch();
     });
 
@@ -502,7 +504,45 @@ e.g. I am a final-year CS student looking for AI/ML internships at startups work
       return d.innerHTML;
     }
     function escAttr(s) {
-      return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function renderMarkdown(text) {
+      if (!text) return '';
+      // Escape HTML first for safety
+      let html = escHtml(text);
+      // Headers: #### → h4, ### → h3, ## → h2
+      html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+      html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+      html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+      // Bold: **text**
+      html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      // Italic: *text*
+      html = html.replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>');
+      // Checkbox list items: - [ ] or - [x]
+      html = html.replace(/^\s*[-*]\s*\[\s*\]\s+(.+)$/gm, '<li class="checklist-item"><span class="checkbox">☐</span> $1</li>');
+      html = html.replace(/^\s*[-*]\s*\[x\]\s+(.+)$/gim, '<li class="checklist-item checked"><span class="checkbox">☑</span> $1</li>');
+      // Bullet list items: - item or * item
+      html = html.replace(/^\s*[-*]\s+(.+)$/gm, '<li>$1</li>');
+      // Numbered list items: 1. item
+      html = html.replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>');
+      // Wrap consecutive <li> in <ul>
+      html = html.replace(/((?:<li[^>]*>.*?<\/li>\s*)+)/g, '<ul>$1</ul>');
+      // Inline code: `text`
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      // Paragraphs: double newline
+      html = html.replace(/\n\n+/g, '</p><p>');
+      // Single newlines within paragraphs
+      html = html.replace(/\n/g, '<br>');
+      // Wrap in paragraph tags
+      html = '<p>' + html + '</p>';
+      // Clean up empty paragraphs
+      html = html.replace(/<p>\s*<\/p>/g, '');
+      // Clean up paragraphs around block elements
+      html = html.replace(/<p>\s*(<h[2-4]>)/g, '$1');
+      html = html.replace(/(<\/h[2-4]>)\s*<\/p>/g, '$1');
+      html = html.replace(/<p>\s*(<ul>)/g, '$1');
+      html = html.replace(/(<\/ul>)\s*<\/p>/g, '$1');
+      return html;
     }
     function showError(msg) { errorEl.textContent = msg; errorEl.classList.add('active'); }
     function hideError() { errorEl.classList.remove('active'); }

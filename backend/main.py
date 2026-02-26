@@ -552,7 +552,7 @@ def generate_overall_advice_with_llm(
 ) -> str:
     """Use a Transformer/LLM to generate a personalized, holistic learning roadmap."""
     # We allow running if the config was completed
-    if not os.getenv("GEMINI_API_KEY", "AIzaSyBf_n_FOG0YV3JbPdItkJzy7dUTKxQ6Sv8"):
+    if not os.getenv("GEMINI_API_KEY"):
         # Fallback to rules-based advice if no LLM configured
         return generate_overall_advice(extracted_skills, matches, gaps)
 
