@@ -12,6 +12,7 @@ import os
 import io
 import logging
 import re
+import uuid
 from typing import Dict, List, Optional, Set
 
 import google.generativeai as genai
@@ -33,6 +34,7 @@ from qdrant_client.models import (
     FieldCondition,
     MatchValue,
 )
+from src.searching import router as search_router, store_user_context
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -48,8 +50,12 @@ TOP_K = int(os.getenv("TOP_K", 5))
 W_SEMANTIC = 0.6   # weight for cosine similarity from Qdrant
 W_SKILL    = 0.4   # weight for discrete skill overlap ratio
 
+# Load environment variables from .env if present
+from dotenv import load_dotenv
+load_dotenv()
+
 # LLM Configuration for holistic advice (Gemini)
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyBf_n_FOG0YV3JbPdItkJzy7dUTKxQ6Sv8")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
 LLM_MODEL_NAME = os.getenv("LLM_MODEL", "gemini-flash-latest")
@@ -76,6 +82,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(search_router)
 
 # ---------------------------------------------------------------------------
 # ML Model, NLP & Qdrant Client  (lazy-loaded on startup)
@@ -144,6 +152,7 @@ class MatchResult(BaseModel):
 
 class ResumeResponse(BaseModel):
     """Response payload for POST /upload_resume."""
+    session_id: str = ""  # Unique session ID for cross-reference in hybrid search
     extracted_skills: List[str]
     matches: List[MatchResult]
     skill_gaps: List[SkillGap]
@@ -634,6 +643,10 @@ async def upload_resume(file: UploadFile = File(...)):
     # 3. Generate embedding for the resume
     resume_vector = generate_embedding(resume_text)
 
+    # 3b. Store resume in session memory for hybrid search cross-reference
+    session_id = str(uuid.uuid4())
+    store_user_context(session_id, extracted_skills, resume_vector, resume_text)
+
     # 4. Query Qdrant for top-K matches
     try:
         search_results = qdrant.search(
@@ -712,6 +725,7 @@ async def upload_resume(file: UploadFile = File(...)):
     overall = generate_overall_advice_with_llm(extracted_skills, matches, unique_gaps)
 
     return ResumeResponse(
+        session_id=session_id,
         extracted_skills=extracted_skills,
         matches=matches,
         skill_gaps=unique_gaps,

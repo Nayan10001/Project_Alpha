@@ -27,7 +27,7 @@ QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
 COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "opportunities")
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 EMBEDDING_DIM = 384
-CSV_PATH = os.path.join(os.path.dirname(__file__), "data.csv")
+CSV_PATH = os.path.join(os.path.dirname(__file__), "../data.csv")
 BATCH_SIZE = 32
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s  %(message)s")
