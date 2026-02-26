@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Alpha — Advanced Hybrid Search</title>
+  <style>
+    :root {
+      --bg: #0f172a;               /* deep blue background */
+      --glass-bg: rgba(30, 41, 59, 0.7);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #818cf8;          /* vibrant indigo */
+      --primary-hover: #4f46e5;
+      --secondary: #38bdf8;        /* light blue */
+      --accent: #f472b6;           /* pink accent */
+      --radius: 16px;
+      --transition: all 0.3s ease;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      background-image: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+                        radial-gradient(circle at 85% 30%, rgba(244, 114, 182, 0.15), transparent 25%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4rem 2rem;
+      letter-spacing: 0.3px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 800px;
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--secondary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+      text-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .header p {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .search-box {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-bottom: 3rem;
+      transition: var(--transition);
+    }
+
+    .search-box:focus-within {
+      box-shadow: 0 0 0 2px var(--primary), 0 10px 40px rgba(99, 102, 241, 0.2);
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 2px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 1.2rem;
+      color: var(--text);
+      font-size: 1.1rem;
+      font-family: inherit;
+      resize: vertical;
+      outline: none;
+      transition: var(--transition);
+      margin-bottom: 1.5rem;
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+    }
+
+    textarea::placeholder {
+      color: #64748b;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: var(--transition);
+      width: 100%;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .loader {
+      display: none;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    /* Results section */
+    .results-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .company-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      backdrop-filter: blur(8px);
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .company-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: linear-gradient(to bottom, var(--secondary), var(--primary));
+      opacity: 0.8;
+    }
+
+    .company-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(129, 140, 248, 0.4);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .org-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .score-badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--secondary);
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .org-desc {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .meta-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tag {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--glass-border);
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .role-list {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--glass-border);
+    }
+    
+    .role-list h4 {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+    
+    .role-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    
+    .role-pill {
+      background: rgba(244, 114, 182, 0.15);
+      color: var(--accent);
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .error-msg {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 1rem;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 500;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Intelligent Search</h1>
+      <p>Describe exactly what kind of companies or roles you are looking for in plain text. Don't hold back on the details.</p>
+    </div>
+
+    <div class="search-box">
+      <textarea id="search-query" placeholder="e.g. I am looking for a cutting-edge AI startup in Guwahati specializing in computer vision, deep learning, and working with PyTorch on real-world data..."></textarea>
+      <button class="btn" id="search-btn" onclick="performSearch()">
+        <span id="btn-text">Discover Companies</span>
+        <div class="loader" id="loader"></div>
+      </button>
+      <div id="error-box" class="error-msg" style="margin-top:1rem;"></div>
+    </div>
+
+    <div class="results-container" id="results">
+      <!-- Dynamic Content Injection -->
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:8000/hybrid_search";
+
+    async function performSearch() {
+      const query = document.getElementById("search-query").value.trim();
+      const resultsContainer = document.getElementById("results");
+      const errorBox = document.getElementById("error-box");
+      const loader = document.getElementById("loader");
+      const btnText = document.getElementById("btn-text");
+      const btn = document.getElementById("search-btn");
+
+      // Reset
+      errorBox.style.display = "none";
+      resultsContainer.innerHTML = "";
+
+      if (!query) {
+        errorBox.textContent = "Please enter a search query.";
+        errorBox.style.display = "block";
+        return;
+      }
+
+      // UI Loading state
+      btn.disabled = true;
+      btnText.style.display = "none";
+      loader.style.display = "block";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ query: query, top_k: 10 })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Server returned ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.length === 0) {
+          resultsContainer.innerHTML = `<div class="company-card" style="text-align:center"><p class="org-desc">No confident matches found for your query. Try rephrasing.</p></div>`;
+        } else {
+          renderResults(data);
+        }
+
+      } catch (err) {
+        errorBox.textContent = `Search failed: ${err.message}. Ensure the backend is running.`;
+        errorBox.style.display = "block";
+      } finally {
+        // UI Restore state
+        btn.disabled = false;
+        btnText.style.display = "inline";
+        loader.style.display = "none";
+      }
+    }
+
+    function renderResults(companies) {
+      const container = document.getElementById("results");
+      let html = "";
+
+      companies.forEach((company, index) => {
+        const scorePct = Math.min(100, Math.round(company.match_score * 100));
+        
+        const rolesHtml = company.matched_roles.map(role => 
+          `<span class="role-pill">${escapeHTML(role)}</span>`
+        ).join("");
+
+        html += `
+          <div class="company-card" style="animation-delay: ${index * 0.1}s">
+            <div class="card-header">
+              <h2 class="org-name">${escapeHTML(company.organisation)}</h2>
+              <div class="score-badge">${scorePct}% Match</div>
+            </div>
+            
+            <p class="org-desc">${escapeHTML(company.description)}</p>
+            
+            <div class="meta-tags">
+              <div class="tag">📍 ${escapeHTML(company.location)}</div>
+            </div>
+
+            ${company.matched_roles.length > 0 ? `
+              <div class="role-list">
+                <h4>Matched Roles Available</h4>
+                <div class="role-pills">
+                  ${rolesHtml}
+                </div>
+              </div>
+            ` : ""}
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    // Helper to prevent XSS
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Allow Enter key to search (cmd+enter / ctrl+enter for textarea)
+    document.getElementById("search-query").addEventListener("keydown", function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        performSearch();
+      }
+    });
+  </script>
+</body>
+</html>

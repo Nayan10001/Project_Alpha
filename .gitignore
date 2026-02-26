@@ -3,3 +3,5 @@ __pycache__/
 Screenshot*.png
 keys.txt
 fastapi_logs.log
+.env
+.venv/
